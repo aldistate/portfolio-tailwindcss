@@ -1,14 +1,18 @@
 {
   "name": "portfolio-tailwind",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "Personal portfolio of Aldi Putra Nawasta, built with Tailwind CSS.",
+  "private": true,
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "gas": "npx tailwindcss -i ./src/input.css -o ./css/style.css --watch"
+    "dev": "npx tailwindcss -i ./src/input.css -o ./css/style.css --watch",
+    "build": "npx tailwindcss -i ./src/input.css -o ./css/style.css --minify",
+    "check": "node --check js/projects.js && node --check js/main.js"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": [
+    "portfolio",
+    "tailwindcss"
+  ],
+  "author": "Aldi Putra Nawasta",
   "license": "ISC",
   "devDependencies": {
     "tailwindcss": "^3.2.7"
