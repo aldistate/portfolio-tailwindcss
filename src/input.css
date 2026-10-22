@@ -3,6 +3,25 @@
 @tailwind utilities;
 
 /* ==================================================
+   VARIABEL MOTION
+   ==================================================
+   Ubah nilai di sini untuk menyetel seluruh animasi:
+   - --duration-fast   : hover / feedback kecil
+   - --duration-base   : transisi tombol, card, navbar
+   - --duration-slow   : entrance hero dan scroll reveal
+   - --ease-out-expo   : easing utama (cepat lalu melambat)
+   - --reveal-distance : jarak slide-up saat elemen muncul
+*/
+:root {
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
+  --duration-fast: 180ms;
+  --duration-base: 320ms;
+  --duration-slow: 700ms;
+  --reveal-distance: 24px;
+}
+
+/* ==================================================
    BASE
    ================================================== */
 @layer base {
@@ -21,6 +40,11 @@
     outline: 2px solid theme("colors.brand.600");
     outline-offset: 3px;
   }
+
+  /* Di panel kontak yang gelap, outline dibuat lebih terang agar terlihat. */
+  #contact :focus-visible {
+    outline-color: theme("colors.brand.300");
+  }
 }
 
 /* ==================================================
@@ -38,11 +62,29 @@
 
   /* Tombol */
   .btn {
-    @apply inline-flex items-center justify-center gap-2 rounded-full text-sm font-semibold transition-colors duration-200 disabled:cursor-not-allowed disabled:opacity-60;
+    @apply inline-flex items-center justify-center gap-2 rounded-full text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-60;
+    transition:
+      color var(--duration-fast) ease,
+      background-color var(--duration-fast) ease,
+      border-color var(--duration-fast) ease,
+      box-shadow var(--duration-base) var(--ease-out-soft),
+      transform var(--duration-base) var(--ease-out-soft);
+  }
+
+  .btn:hover {
+    transform: translateY(-2px);
+  }
+
+  .btn:active {
+    transform: translateY(0);
   }
 
   .btn-primary {
     @apply bg-brand-700 px-6 py-3 text-white shadow-sm hover:bg-brand-800 active:bg-brand-900;
+  }
+
+  .btn-primary:hover {
+    box-shadow: 0 12px 26px -14px rgba(15, 118, 110, 0.65);
   }
 
   .btn-secondary {
@@ -53,18 +95,40 @@
     @apply bg-white px-6 py-3 text-slate-900 hover:bg-slate-100;
   }
 
+  .btn-inverse:hover {
+    box-shadow: 0 12px 26px -16px rgba(2, 6, 23, 0.55);
+  }
+
+  .btn-arrow {
+    transition: transform var(--duration-base) var(--ease-out-soft);
+  }
+
+  .btn:hover .btn-arrow,
+  .btn:focus-visible .btn-arrow {
+    transform: translateX(3px);
+  }
+
   /* Navigasi */
   .nav-link {
     @apply relative rounded-md px-3 py-2 text-sm font-medium text-slate-600 transition-colors hover:text-slate-900;
   }
 
-  .nav-link[aria-current="location"] {
-    @apply text-brand-700;
+  .nav-link::after {
+    content: "";
+    @apply absolute inset-x-3 -bottom-0.5 h-0.5 rounded-full bg-current;
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform var(--duration-base) var(--ease-out-soft);
   }
 
+  .nav-link:hover::after,
+  .nav-link:focus-visible::after,
   .nav-link[aria-current="location"]::after {
-    content: "";
-    @apply absolute inset-x-3 -bottom-0.5 h-0.5 rounded-full bg-brand-600;
+    transform: scaleX(1);
+  }
+
+  .nav-link[aria-current="location"] {
+    @apply text-brand-700;
   }
 
   .mobile-nav-link {
@@ -99,6 +163,14 @@
 
   .badge {
     @apply inline-flex items-center rounded-full border border-slate-200 bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700;
+    transition:
+      background-color var(--duration-fast) ease,
+      border-color var(--duration-fast) ease,
+      color var(--duration-fast) ease;
+  }
+
+  .badge:hover {
+    @apply border-brand-200 bg-brand-50 text-brand-800;
   }
 
   .icon-box {
@@ -110,16 +182,31 @@
     height: 1.25rem;
   }
 
-  .link-arrow {
+  .link-arrow,
+  .project-link {
     @apply inline-flex items-center gap-2 text-sm font-semibold text-brand-700 transition-colors hover:text-brand-800;
   }
 
-  .project-link {
-    @apply inline-flex items-center gap-1.5 text-sm font-semibold text-brand-700 transition-colors hover:text-brand-800;
+  .link-arrow svg,
+  .project-link svg {
+    transition: transform var(--duration-base) var(--ease-out-soft);
+  }
+
+  .link-arrow:hover svg,
+  .project-link:hover svg {
+    transform: translateX(3px);
   }
 
   .social-link {
     @apply flex items-center gap-3 rounded-xl border border-slate-700 bg-slate-800 px-4 py-3 text-sm font-medium text-slate-200 transition-colors hover:border-slate-600 hover:bg-slate-700 hover:text-white;
+  }
+
+  .social-link svg {
+    transition: transform var(--duration-base) var(--ease-out-soft);
+  }
+
+  .social-link:hover svg {
+    transform: translateY(-1px) scale(1.08);
   }
 
   /* Bayangan header setelah halaman di-scroll. */
@@ -136,6 +223,491 @@
     background-color: theme("colors.brand.600");
     animation: cursor-blink 1s steps(2, start) infinite;
   }
+
+  /* Card project: gambar memenuhi card, informasi diletakkan di atas overlay. */
+  .project-card {
+    cursor: pointer;
+    transform: perspective(900px) rotateX(var(--tilt-x, 0deg))
+      rotateY(var(--tilt-y, 0deg)) translate3d(0, var(--card-lift, 0px), 0);
+    transition:
+      transform var(--duration-base) var(--ease-out-soft),
+      border-color var(--duration-base) ease,
+      box-shadow var(--duration-base) var(--ease-out-soft);
+  }
+
+  .project-card:hover,
+  .project-card:focus-within {
+    --card-lift: -5px;
+    @apply border-brand-400/40;
+    box-shadow: 0 24px 50px -24px rgba(2, 6, 23, 0.55);
+  }
+
+  .project-card.is-tilting {
+    transition-duration: 80ms;
+  }
+
+  .project-card-shade {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: linear-gradient(
+      to top,
+      rgba(2, 6, 23, 0.98) 0%,
+      rgba(2, 6, 23, 0.9) 38%,
+      rgba(2, 6, 23, 0.65) 68%,
+      rgba(2, 6, 23, 0.18) 100%
+    );
+    transition: background-color var(--duration-base) ease;
+  }
+
+  .project-card:hover .project-card-shade {
+    background-color: rgba(2, 6, 23, 0.16);
+  }
+
+  .project-category {
+    @apply inline-flex items-center rounded-full border border-white/20 bg-slate-900/60 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-white backdrop-blur-sm;
+  }
+
+  .project-index {
+    @apply text-xs font-semibold tabular-nums tracking-[0.18em] text-white/50;
+  }
+
+  .project-context {
+    @apply text-[11px] font-semibold uppercase tracking-[0.16em] text-brand-200;
+  }
+
+  .project-card h3 {
+    transition: translate var(--duration-base) var(--ease-out-soft);
+  }
+
+  .project-card:hover h3,
+  .project-card:focus-within h3 {
+    translate: 0 -2px;
+  }
+
+  .project-card-description {
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    transition: color var(--duration-base) ease;
+  }
+
+  .project-card:hover .project-card-description,
+  .project-card:focus-within .project-card-description {
+    @apply text-white;
+  }
+
+  .project-tech {
+    @apply inline-flex items-center rounded-full border border-white/20 bg-white/10 px-2.5 py-1 text-[11px] font-medium text-slate-100;
+  }
+
+  .project-detail-trigger {
+    @apply inline-flex items-center gap-2 rounded-full bg-white px-4 py-2.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-900 transition-colors duration-200 hover:bg-brand-100;
+  }
+
+  .project-detail-trigger svg,
+  .project-card-link svg {
+    transition: transform var(--duration-base) var(--ease-out-soft);
+  }
+
+  .project-card:hover .project-detail-trigger svg,
+  .project-detail-trigger:hover svg,
+  .project-card-link:hover svg {
+    transform: translateX(3px);
+  }
+
+  .project-card-link {
+    @apply inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-200 transition-colors hover:text-white;
+  }
+
+  /* Quick facts / kartu About: interaksi ringan tanpa mengubah layout. */
+  .about-card {
+    transition:
+      transform var(--duration-base) var(--ease-out-soft),
+      border-color var(--duration-base) ease,
+      box-shadow var(--duration-base) var(--ease-out-soft);
+  }
+
+  .about-card:hover {
+    @apply border-brand-200;
+    transform: translateY(-3px);
+    box-shadow: 0 16px 32px -24px rgba(15, 23, 42, 0.38);
+  }
+
+  .about-card .icon-box {
+    transition: transform var(--duration-base) var(--ease-out-soft);
+  }
+
+  .about-card:hover .icon-box {
+    transform: rotate(-5deg) scale(1.06);
+  }
+
+  /* Kartu skill: reveal scale + micro-interaction pada ikon. */
+  .skill-card {
+    transition:
+      transform var(--duration-base) var(--ease-out-soft),
+      border-color var(--duration-base) ease,
+      box-shadow var(--duration-base) var(--ease-out-soft);
+  }
+
+  .skill-card:hover {
+    @apply border-brand-200;
+    transform: translateY(-3px);
+    box-shadow: 0 18px 34px -26px rgba(15, 23, 42, 0.4);
+  }
+
+  .skill-card .icon-box {
+    transition: transform var(--duration-base) var(--ease-out-soft);
+  }
+
+  .skill-card:hover .icon-box {
+    transform: translateY(-2px) rotate(-4deg);
+  }
+
+  .skill-index {
+    @apply text-[11px] font-semibold tabular-nums tracking-[0.18em] text-slate-300;
+  }
+}
+
+/* ==================================================
+   INDIKATOR PROGRESS SCROLL
+   ================================================== */
+.scroll-progress {
+  position: fixed;
+  inset: 0 0 auto;
+  z-index: 60;
+  height: 2px;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+#scroll-progress-bar {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background-image: linear-gradient(
+    90deg,
+    theme("colors.brand.500"),
+    theme("colors.brand.700")
+  );
+  transform: scaleX(0);
+  transform-origin: left center;
+  will-change: transform;
+}
+
+/* ==================================================
+   HERO: ENTRANCE, AMBIENT, PARALLAX
+   ================================================== */
+.hero-enter {
+  animation: hero-enter-in var(--duration-slow) var(--ease-out-expo) both;
+  animation-delay: var(--enter-delay, 0ms);
+}
+
+/* H1 dipecah menjadi kata agar muncul berurutan tanpa mengganggu pembacaan. */
+.hero-word {
+  display: inline-block;
+  animation: hero-word-in 850ms var(--ease-out-expo) both;
+}
+
+.hero-word:nth-child(1) {
+  animation-delay: 100ms;
+}
+
+.hero-word:nth-child(2) {
+  animation-delay: 190ms;
+}
+
+.hero-word:nth-child(3) {
+  animation-delay: 280ms;
+}
+
+.hero-word:nth-child(4) {
+  animation-delay: 370ms;
+}
+
+@keyframes hero-enter-in {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 20px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes hero-word-in {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 0.7em, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+.hero-ambient {
+  overflow: hidden;
+}
+
+/* Grid titik tipis memberi tekstur "engineering", bukan dekorasi ramai. */
+.hero-ambient::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(
+    rgba(15, 23, 42, 0.07) 1px,
+    transparent 1px
+  );
+  background-size: 24px 24px;
+  -webkit-mask-image: radial-gradient(
+    ellipse at 50% 40%,
+    #000 0%,
+    transparent 72%
+  );
+  mask-image: radial-gradient(ellipse at 50% 40%, #000 0%, transparent 72%);
+}
+
+.ambient-blob {
+  position: absolute;
+  display: block;
+  border-radius: 9999px;
+  filter: blur(60px);
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+.ambient-blob-1 {
+  top: -8rem;
+  right: -6rem;
+  width: 30rem;
+  height: 30rem;
+  background: radial-gradient(
+    circle at center,
+    rgba(45, 212, 191, 0.24),
+    rgba(45, 212, 191, 0) 70%
+  );
+  animation: ambient-drift 18s ease-in-out infinite alternate;
+}
+
+.ambient-blob-2 {
+  bottom: -10rem;
+  left: -7rem;
+  width: 26rem;
+  height: 26rem;
+  background: radial-gradient(
+    circle at center,
+    rgba(15, 118, 110, 0.16),
+    rgba(15, 118, 110, 0) 70%
+  );
+  animation: ambient-drift 22s ease-in-out infinite alternate-reverse;
+}
+
+@keyframes ambient-drift {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(-2rem, 1.5rem, 0) scale(1.06);
+  }
+  100% {
+    transform: translate3d(1.5rem, -1rem, 0) scale(0.97);
+  }
+}
+
+/* Posisi parallax diisi oleh js/main.js dalam rentang -1 sampai 1. */
+[data-hero-parallax] {
+  transform: translate3d(
+    calc(var(--parallax-x, 0) * 10px),
+    calc(var(--parallax-y, 0) * 10px),
+    0
+  );
+}
+
+@media (hover: hover) and (pointer: fine) {
+  [data-hero-parallax] {
+    will-change: transform;
+  }
+}
+
+/* ==================================================
+   SCROLL REVEAL
+   ==================================================
+   Class .reveal-ready ditambahkan oleh JavaScript. Tanpa JavaScript
+   (atau jika inisialisasi gagal), semua konten tetap terlihat.
+*/
+html.reveal-ready [data-reveal] {
+  opacity: 0;
+  /* Properti individual `translate`/`scale` tidak bentrok dengan transform tilt. */
+  translate: 0 var(--reveal-distance);
+  transition:
+    opacity var(--duration-slow) var(--ease-out-expo),
+    translate var(--duration-slow) var(--ease-out-expo),
+    scale var(--duration-slow) var(--ease-out-expo),
+    filter var(--duration-slow) var(--ease-out-expo),
+    clip-path var(--duration-slow) var(--ease-out-expo);
+  transition-delay: var(--reveal-delay, 0ms);
+}
+
+/* Variasi arah masuk agar tiap section punya karakter gerak sendiri. */
+html.reveal-ready [data-reveal="left"] {
+  /* Tetap di dalam padding container agar tidak memicu overflow horizontal. */
+  translate: calc(var(--reveal-distance) * -0.7) 0;
+}
+
+html.reveal-ready [data-reveal="right"] {
+  translate: calc(var(--reveal-distance) * 0.7) 0;
+}
+
+html.reveal-ready [data-reveal="scale"] {
+  translate: 0 calc(var(--reveal-distance) * 0.7);
+  scale: 0.94;
+}
+
+/* Projects: gambar dan konten masuk dari kondisi blur, lalu menjadi fokus. */
+html.reveal-ready [data-reveal="focus"] {
+  translate: 0 20px;
+  filter: blur(7px);
+}
+
+html.reveal-ready [data-reveal="clip"] {
+  translate: 0 18px;
+}
+
+/*
+ * Clip-path dipasang pada anak, bukan pada elemen yang diamati.
+ * Elemen yang ter-clip 100% bisa dianggap tidak beririsan oleh
+ * IntersectionObserver sehingga reveal tidak pernah berjalan.
+ */
+html.reveal-ready [data-reveal="clip"] > * {
+  clip-path: inset(0 0 100% 0);
+  transition: clip-path var(--duration-slow) var(--ease-out-expo);
+  transition-delay: var(--reveal-delay, 0ms);
+}
+
+html.reveal-ready [data-reveal].is-visible {
+  opacity: 1;
+  translate: 0 0;
+  scale: 1;
+  filter: none;
+}
+
+html.reveal-ready [data-reveal="clip"].is-visible > * {
+  clip-path: inset(0 0 0 0);
+}
+
+/* ==================================================
+   CUSTOM CURSOR
+   ==================================================
+   Hanya dibuat oleh JS pada perangkat dengan pointer presisi.
+   Cursor asli baru disembunyikan setelah elemen kursor siap.
+*/
+.cursor-dot,
+.cursor-ring {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 80;
+  border-radius: 9999px;
+  pointer-events: none;
+  opacity: 0;
+  transition:
+    opacity var(--duration-fast) ease,
+    width var(--duration-fast) var(--ease-out-soft),
+    height var(--duration-fast) var(--ease-out-soft),
+    background-color var(--duration-fast) ease,
+    border-color var(--duration-fast) ease;
+  will-change: transform;
+}
+
+.cursor-dot {
+  width: 6px;
+  height: 6px;
+  background-color: theme("colors.brand.700");
+}
+
+/* Titik dibuat putih saat hover agar tetap terlihat di tombol/panel gelap. */
+.cursor-dot.is-interactive {
+  width: 8px;
+  height: 8px;
+  background-color: #fff;
+  box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.28);
+}
+
+.cursor-ring {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border: 1px solid rgba(15, 118, 110, 0.45);
+  background-color: transparent;
+}
+
+html.cursor-ready .cursor-dot,
+html.cursor-ready .cursor-ring {
+  opacity: 1;
+}
+
+html.cursor-ready .cursor-dot.is-hidden,
+html.cursor-ready .cursor-ring.is-hidden {
+  opacity: 0;
+}
+
+.cursor-ring.is-interactive {
+  width: 52px;
+  height: 52px;
+  border-color: rgba(15, 118, 110, 0.7);
+  background-color: rgba(13, 148, 136, 0.07);
+}
+
+.cursor-ring.has-label {
+  width: 78px;
+  height: 78px;
+  border-color: transparent;
+  background-color: rgba(15, 23, 42, 0.92);
+  color: #fff;
+}
+
+.cursor-ring.has-label::after {
+  content: attr(data-label);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  opacity: 1;
+  transition: opacity var(--duration-fast) ease;
+}
+
+.cursor-ring.is-pressed {
+  width: 28px;
+  height: 28px;
+}
+
+.cursor-ring.has-label.is-pressed {
+  width: 66px;
+  height: 66px;
+}
+
+/* Jangan sembunyikan kursor asli sebelum JS siap. */
+html.cursor-ready,
+html.cursor-ready body,
+html.cursor-ready a,
+html.cursor-ready button,
+html.cursor-ready summary,
+html.cursor-ready [role="button"] {
+  cursor: none;
+}
+
+/* Kolom teks tetap memakai kursor I-beam bawaan. */
+html.cursor-ready input,
+html.cursor-ready textarea,
+html.cursor-ready select {
+  cursor: auto;
 }
 
 /* Sembunyikan marker bawaan <summary> pada menu mobile. */
@@ -159,6 +731,901 @@
 }
 
 /* ==================================================
+   HEADER STATE: NAV BIASA -> FLOATING LAUNCHER
+   ==================================================
+   Navigasi utama hanya tampil di atas. Setelah melewati ambang scroll,
+   launcher menggantikannya agar tidak ada dua sistem navigasi aktif.
+*/
+#site-header nav[aria-label="Primary"],
+#mobile-nav {
+  transition:
+    opacity 180ms ease,
+    translate 180ms ease,
+    visibility 0s;
+}
+
+body.launcher-active #site-header nav[aria-label="Primary"],
+body.launcher-active #mobile-nav {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  translate: 0 -5px;
+  transition:
+    opacity 180ms ease,
+    translate 180ms ease,
+    visibility 0s 180ms;
+}
+
+/* Ruang ekstra agar launcher tidak menutupi "Back to top" di footer. */
+body.launcher-active footer {
+  padding-bottom: 7rem;
+}
+
+/* ==================================================
+   HERO: CLOCK, PORTRAIT LIGHT, SCROLL CUE
+   ================================================== */
+.clock-status-dot {
+  width: 0.4rem;
+  height: 0.4rem;
+  flex: none;
+  border-radius: 9999px;
+  background-color: theme("colors.brand.600");
+  box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.14);
+  animation: clock-pulse 2.6s ease-in-out infinite;
+}
+
+@keyframes clock-pulse {
+  0%,
+  100% {
+    opacity: 0.7;
+    box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.12);
+  }
+  50% {
+    opacity: 1;
+    box-shadow: 0 0 0 5px rgba(13, 148, 136, 0.06);
+  }
+}
+
+.portrait-frame {
+  overflow: hidden;
+}
+
+/* Highlight lembut mengikuti parallax pointer, bukan lapisan dekoratif baru. */
+.portrait-frame::after {
+  content: "";
+  position: absolute;
+  inset: 0.75rem;
+  border-radius: 1.25rem;
+  pointer-events: none;
+  background: radial-gradient(
+    circle at calc(68% + var(--parallax-x, 0) * 10%),
+      calc(18% + var(--parallax-y, 0) * 10%),
+    rgba(255, 255, 255, 0.32),
+    transparent 42%
+  );
+  mix-blend-mode: screen;
+}
+
+.scroll-cue {
+  @apply mx-auto mt-14 flex w-fit flex-col items-center gap-3 text-[10px] font-semibold uppercase tracking-[0.24em] text-slate-500 transition-colors hover:text-brand-700;
+}
+
+.scroll-cue-line {
+  display: block;
+  width: 1px;
+  height: 2.75rem;
+  overflow: hidden;
+  background-color: rgba(148, 163, 184, 0.45);
+}
+
+.scroll-cue-line span {
+  display: block;
+  width: 1px;
+  height: 0.9rem;
+  background-color: theme("colors.brand.600");
+  animation: scroll-cue-line 1.8s var(--ease-out-soft) infinite;
+}
+
+@keyframes scroll-cue-line {
+  0% {
+    transform: translateY(-110%);
+  }
+  45%,
+  55% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(320%);
+  }
+}
+
+/* ==================================================
+   QUOTE INTERLUDE
+   ================================================== */
+.quote-band {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  background-color: #020617;
+  padding: 5rem 0;
+}
+
+.quote-band::before {
+  content: "";
+  position: absolute;
+  top: -12rem;
+  right: -8rem;
+  width: 34rem;
+  height: 34rem;
+  border-radius: 9999px;
+  pointer-events: none;
+  background: radial-gradient(
+    circle at center,
+    rgba(20, 184, 166, 0.18),
+    rgba(20, 184, 166, 0) 68%
+  );
+}
+
+.quote-grid {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.45;
+  background-image:
+    linear-gradient(rgba(148, 163, 184, 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(148, 163, 184, 0.08) 1px, transparent 1px);
+  background-size: 72px 72px;
+  -webkit-mask-image: radial-gradient(ellipse at 28% 50%, #000 0%, transparent 72%);
+  mask-image: radial-gradient(ellipse at 28% 50%, #000 0%, transparent 72%);
+}
+
+.quote-layout {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: 2rem;
+}
+
+@media (min-width: 1024px) {
+  .quote-band {
+    padding: 7rem 0;
+  }
+
+  .quote-layout {
+    grid-template-columns: 12rem minmax(0, 1fr);
+    align-items: start;
+    gap: 4rem;
+  }
+}
+
+.quote-kicker {
+  @apply text-[11px] font-semibold uppercase tracking-[0.2em] text-brand-300;
+  padding-top: 0.55rem;
+}
+
+.quote-figure {
+  position: relative;
+  max-width: 56rem;
+  padding-top: 1.75rem;
+}
+
+.quote-mark {
+  position: absolute;
+  top: -3.25rem;
+  left: -0.35rem;
+  font-family: ui-serif, Georgia, Cambria, "Times New Roman", serif;
+  font-size: 8rem;
+  line-height: 1;
+  color: rgba(45, 212, 191, 0.16);
+  pointer-events: none;
+  transition:
+    opacity 850ms var(--ease-out-expo),
+    transform 850ms var(--ease-out-expo);
+}
+
+html.reveal-ready .quote-figure .quote-mark {
+  opacity: 0;
+  transform: rotate(-10deg) scale(0.82);
+}
+
+html.reveal-ready .quote-figure.is-visible .quote-mark {
+  opacity: 1;
+  transform: rotate(0deg) scale(1);
+  transition-delay: 220ms;
+}
+
+.quote-text {
+  position: relative;
+  z-index: 1;
+  max-width: 48rem;
+  font-family: ui-serif, Georgia, Cambria, "Times New Roman", serif;
+  font-size: clamp(2rem, 6vw, 4rem);
+  font-weight: 500;
+  line-height: 1.08;
+  letter-spacing: -0.025em;
+  color: #fff;
+}
+
+.quote-attribution {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 2rem;
+  color: #cbd5e1;
+  font-size: 0.875rem;
+}
+
+.quote-rule {
+  display: block;
+  width: 2.5rem;
+  height: 1px;
+  flex: none;
+  background-color: theme("colors.brand.500");
+}
+
+@media (min-width: 1024px) {
+  .quote-figure {
+    padding-top: 0;
+  }
+
+  .quote-mark {
+    top: -4.5rem;
+    font-size: 11rem;
+  }
+}
+
+/* ==================================================
+   MAGNETIC HOVER
+   ==================================================
+   Hanya elemen dengan [data-magnetic] yang bergerak. JS memakai properti
+   individual `translate` agar tidak menimpa transform hover tombol/card.
+*/
+[data-magnetic] {
+  touch-action: manipulation;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  [data-magnetic].is-magnetic-active {
+    will-change: translate;
+  }
+}
+
+/* ==================================================
+   FLOATING MENU LAUNCHER
+   ================================================== */
+.menu-launcher {
+  position: fixed;
+  right: max(1rem, env(safe-area-inset-right));
+  bottom: max(1rem, env(safe-area-inset-bottom));
+  z-index: 50;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  border-radius: 9999px;
+  background-color: rgba(2, 6, 23, 0.92);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  box-shadow: 0 18px 40px -20px rgba(2, 6, 23, 0.7);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(14px) scale(0.94);
+  pointer-events: none;
+  transition:
+    opacity 250ms ease,
+    transform 350ms var(--ease-out-soft),
+    background-color 200ms ease,
+    border-color 200ms ease,
+    visibility 0s 350ms;
+}
+
+body.launcher-active .menu-launcher {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+  transition-delay: 0s;
+}
+
+body.menu-open .menu-launcher {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.menu-launcher:hover {
+  background-color: theme("colors.brand.700");
+  border-color: rgba(94, 234, 212, 0.45);
+}
+
+.menu-launcher-icon {
+  display: flex;
+  width: 1rem;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.menu-launcher-icon span {
+  display: block;
+  width: 100%;
+  height: 2px;
+  border-radius: 9999px;
+  background-color: currentColor;
+  transition: width var(--duration-base) var(--ease-out-soft);
+}
+
+.menu-launcher:hover .menu-launcher-icon span:first-child {
+  width: 68%;
+}
+
+.menu-launcher:hover .menu-launcher-icon span:last-child {
+  width: 84%;
+}
+
+/* ==================================================
+   SITE MENU OVERLAY
+   ==================================================
+   z-index 70 berada di bawah custom cursor (80), jadi kursor tetap terlihat.
+*/
+.site-menu {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background-color: #020617;
+  color: #fff;
+  opacity: 0;
+  transition: opacity 250ms ease;
+}
+
+.site-menu[hidden] {
+  display: none;
+}
+
+.site-menu.is-open {
+  opacity: 1;
+}
+
+.site-menu-ambient {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 84% 12%, rgba(20, 184, 166, 0.2), transparent 38%),
+    radial-gradient(circle at 8% 92%, rgba(15, 118, 110, 0.16), transparent 42%);
+}
+
+.site-menu-ambient::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  opacity: 0.4;
+  background-image: radial-gradient(rgba(148, 163, 184, 0.16) 1px, transparent 1px);
+  background-size: 28px 28px;
+  -webkit-mask-image: radial-gradient(ellipse at 60% 30%, #000 0%, transparent 68%);
+  mask-image: radial-gradient(ellipse at 60% 30%, #000 0%, transparent 68%);
+}
+
+.site-menu-shell {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  min-height: 100vh;
+  min-height: 100dvh;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  flex-direction: column;
+  padding: 1.25rem;
+}
+
+@media (min-width: 640px) {
+  .site-menu-shell {
+    padding: 1.5rem 2rem;
+  }
+}
+
+/* Tombol close tetap terjangkau saat overlay di-scroll di layar pendek. */
+.site-menu-head {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  padding-block: 0.75rem;
+  background-color: #020617;
+}
+
+.site-menu-grid {
+  display: grid;
+  flex: 1;
+  align-content: center;
+  gap: 2.5rem;
+  padding: 3rem 0;
+}
+
+@media (min-width: 1024px) {
+  .site-menu-grid {
+    grid-template-columns: minmax(0, 1.2fr) minmax(18rem, 0.8fr);
+    gap: 4rem;
+    padding: 4rem 0;
+  }
+}
+
+.site-menu-kicker {
+  @apply text-[11px] font-semibold uppercase tracking-[0.2em] text-brand-300;
+}
+
+.site-menu-list {
+  margin-top: 1.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.site-menu-item {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  opacity: 0;
+  translate: 0 18px;
+  transition:
+    opacity 350ms ease,
+    translate 350ms var(--ease-out-soft);
+}
+
+.site-menu.is-open .site-menu-item {
+  opacity: 1;
+  translate: 0 0;
+  transition-delay: calc(var(--menu-index) * 55ms + 120ms);
+}
+
+.site-menu-link {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.9rem 0;
+  color: #cbd5e1;
+  font-size: clamp(1.8rem, 5vw, 3.5rem);
+  font-weight: 600;
+  letter-spacing: -0.035em;
+  transition: color var(--duration-fast) ease;
+}
+
+.site-menu-link:hover,
+.site-menu-link:focus-visible,
+.site-menu-link[aria-current="location"] {
+  color: theme("colors.brand.300");
+}
+
+.site-menu-number {
+  width: 2rem;
+  flex: none;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  color: theme("colors.brand.500");
+}
+
+.site-menu-arrow {
+  width: 1.5rem;
+  height: 1.5rem;
+  margin-left: auto;
+  flex: none;
+  opacity: 0;
+  transform: translateX(-8px);
+  transition:
+    opacity var(--duration-base) ease,
+    transform var(--duration-base) var(--ease-out-soft);
+}
+
+.site-menu-link:hover .site-menu-arrow,
+.site-menu-link:focus-visible .site-menu-arrow,
+.site-menu-link[aria-current="location"] .site-menu-arrow {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.site-menu-aside {
+  display: grid;
+  align-content: start;
+  gap: 1.75rem;
+}
+
+.site-menu-label {
+  margin-bottom: 0.5rem;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #94a3b8;
+}
+
+.site-menu-clock {
+  font-size: 1.5rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: #fff;
+}
+
+.menu-social-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.25rem 1.25rem;
+}
+
+.menu-social-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 0.55rem 0;
+  color: #cbd5e1;
+  font-size: 0.875rem;
+  transition: color var(--duration-fast) ease;
+}
+
+.menu-social-link span {
+  color: theme("colors.brand.400");
+  transition: transform var(--duration-base) var(--ease-out-soft);
+}
+
+.menu-social-link:hover {
+  color: #fff;
+}
+
+.menu-social-link:hover span {
+  transform: translate(2px, -2px);
+}
+
+.site-menu-email {
+  color: #fff;
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-decoration: underline;
+  text-decoration-color: #475569;
+  text-underline-offset: 4px;
+  transition: text-decoration-color var(--duration-fast) ease;
+}
+
+.site-menu-email:hover {
+  text-decoration-color: #fff;
+}
+
+.site-menu-close {
+  display: inline-flex;
+  height: 2.75rem;
+  width: 2.75rem;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 9999px;
+  color: #fff;
+  transition:
+    background-color var(--duration-fast) ease,
+    border-color var(--duration-fast) ease,
+    transform var(--duration-base) var(--ease-out-soft);
+}
+
+.site-menu-close:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.32);
+  transform: rotate(90deg);
+}
+
+.site-menu-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 1rem 0;
+  color: #64748b;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+#site-menu :focus-visible {
+  outline-color: theme("colors.brand.300");
+}
+
+/* ==================================================
+   PROJECT DETAIL DIALOG
+   ================================================== */
+.project-dialog {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  width: min(960px, calc(100vw - 2rem));
+  max-width: 960px;
+  max-height: calc(100vh - 2rem);
+  max-height: calc(100dvh - 2rem);
+  margin: auto;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  overflow: visible;
+}
+
+.project-dialog::backdrop {
+  background-color: rgba(2, 6, 23, 0.76);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  animation: project-backdrop-in 260ms ease both;
+}
+
+.project-dialog-shell {
+  position: relative;
+  overflow: hidden;
+  max-height: calc(100vh - 2rem);
+  max-height: calc(100dvh - 2rem);
+  border-radius: 1.5rem;
+  background-color: #fff;
+  box-shadow: 0 40px 90px -30px rgba(2, 6, 23, 0.65);
+  animation: project-dialog-in 380ms var(--ease-out-expo) both;
+}
+
+.project-dialog-scroll {
+  max-height: inherit;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.project-dialog-close {
+  position: absolute;
+  right: 1rem;
+  top: 1rem;
+  z-index: 20;
+  display: inline-flex;
+  height: 2.5rem;
+  width: 2.5rem;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  border-radius: 9999px;
+  background-color: rgba(255, 255, 255, 0.94);
+  color: #0f172a;
+  box-shadow: 0 8px 20px -12px rgba(2, 6, 23, 0.5);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  transition:
+    background-color var(--duration-fast) ease,
+    transform var(--duration-base) var(--ease-out-soft);
+}
+
+.project-dialog-close:hover {
+  background-color: #fff;
+  transform: rotate(90deg);
+}
+
+.project-dialog.is-closing .project-dialog-shell {
+  animation: project-dialog-out 180ms ease both;
+}
+
+.project-dialog.is-closing::backdrop {
+  animation: project-backdrop-out 180ms ease both;
+}
+
+@keyframes project-dialog-in {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes project-dialog-out {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(10px) scale(0.985);
+  }
+}
+
+@keyframes project-backdrop-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes project-backdrop-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+/* Scroll dikunci saat overlay/dialog terbuka tanpa menghilangkan posisi. */
+html.page-locked,
+html.page-locked body {
+  overflow: hidden;
+}
+
+/*
+ * Saat dialog native terbuka, elemen dialog berada di top layer (di atas
+ * custom cursor). Kembalikan kursor asli sementara agar pengguna tetap bisa
+ * berinteraksi dengan nyaman di dalam modal.
+ */
+html.cursor-ready.dialog-open,
+html.cursor-ready.dialog-open body,
+html.cursor-ready.dialog-open a,
+html.cursor-ready.dialog-open button,
+html.cursor-ready.dialog-open summary,
+html.cursor-ready.dialog-open [role="button"] {
+  cursor: auto;
+}
+
+html.dialog-open .cursor-dot,
+html.dialog-open .cursor-ring,
+html.dialog-open .menu-launcher {
+  display: none;
+}
+
+/* ==================================================
+   CONTACT PANEL AMBIENT
+   ================================================== */
+.contact-panel {
+  position: relative;
+  isolation: isolate;
+}
+
+.contact-panel::before {
+  content: "";
+  position: absolute;
+  top: -10rem;
+  right: -5rem;
+  width: 30rem;
+  height: 30rem;
+  border-radius: 9999px;
+  pointer-events: none;
+  background: radial-gradient(
+    circle at center,
+    rgba(20, 184, 166, 0.16),
+    rgba(20, 184, 166, 0) 68%
+  );
+}
+
+.contact-panel > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* ==================================================
+   RESPONSIVE / PERFORMANCE
+   ================================================== */
+@media (max-width: 767px) {
+  /* Animasi blob dihentikan di layar kecil agar tidak membebani GPU. */
+  .ambient-blob {
+    filter: blur(38px);
+    opacity: 0.45;
+    animation: none;
+  }
+
+  .scroll-cue {
+    margin-top: 2.5rem;
+  }
+
+  .quote-band {
+    padding: 4rem 0;
+  }
+
+  .quote-figure {
+    padding-top: 2rem;
+  }
+
+  .quote-mark {
+    top: -2.35rem;
+    font-size: 6.5rem;
+  }
+
+  body.launcher-active footer {
+    padding-bottom: 6rem;
+  }
+}
+
+/* Di layar sangat sempit, launcher menjadi ikon saja agar tidak menutupi CTA. */
+@media (max-width: 360px) {
+  .menu-launcher {
+    gap: 0;
+    padding: 0.9rem;
+  }
+
+  .menu-launcher-label {
+    display: none;
+  }
+}
+
+@media (hover: none), (pointer: coarse) {
+  /* Cadangan CSS jika kursor sempat dibuat sebelum mode sentuh terdeteksi. */
+  .cursor-dot,
+  .cursor-ring {
+    display: none !important;
+  }
+}
+
+/* Pastikan semua konten terlihat saat halaman dicetak. */
+@media print {
+  html.reveal-ready [data-reveal] {
+    opacity: 1 !important;
+    translate: 0 0 !important;
+    scale: 1 !important;
+    clip-path: none !important;
+    filter: none !important;
+    transform: none !important;
+    transition: none !important;
+  }
+
+  html.reveal-ready [data-reveal="clip"] > * {
+    clip-path: none !important;
+    transition: none !important;
+  }
+
+  .hero-enter,
+  .hero-word {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  [data-hero-parallax] {
+    transform: none !important;
+  }
+
+  .scroll-progress,
+  .hero-ambient,
+  .cursor-dot,
+  .cursor-ring,
+  .menu-launcher,
+  .site-menu,
+  .project-dialog,
+  .scroll-cue,
+  .quote-grid {
+    display: none !important;
+  }
+
+  .quote-band {
+    background: #fff !important;
+    color: #0f172a !important;
+  }
+
+  .quote-text {
+    color: #0f172a !important;
+  }
+
+  .quote-kicker,
+  .quote-attribution {
+    color: #475569 !important;
+  }
+
+  .quote-mark {
+    color: rgba(15, 118, 110, 0.18) !important;
+  }
+
+  #site-header {
+    position: static !important;
+  }
+}
+
+/* ==================================================
    REDUCED MOTION
    ================================================== */
 @media (prefers-reduced-motion: reduce) {
@@ -177,5 +1644,61 @@
 
   .typing-cursor {
     display: none;
+  }
+
+  .hero-enter,
+  .hero-word {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  html.reveal-ready [data-reveal] {
+    opacity: 1 !important;
+    translate: 0 0 !important;
+    scale: 1 !important;
+    clip-path: none !important;
+    filter: none !important;
+    transform: none !important;
+    transition: none !important;
+  }
+
+  html.reveal-ready [data-reveal="clip"] > * {
+    clip-path: none !important;
+    transition: none !important;
+  }
+
+  html.reveal-ready .quote-figure .quote-mark {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+
+  [data-hero-parallax],
+  .project-card,
+  .about-card,
+  .skill-card {
+    transform: none !important;
+  }
+
+  [data-magnetic] {
+    translate: 0 0 !important;
+  }
+
+  .hero-ambient,
+  .cursor-dot,
+  .cursor-ring,
+  .clock-status-dot,
+  .scroll-cue-line span {
+    display: none !important;
+  }
+
+  html.cursor-ready,
+  html.cursor-ready body,
+  html.cursor-ready a,
+  html.cursor-ready button,
+  html.cursor-ready summary,
+  html.cursor-ready [role="button"] {
+    cursor: auto !important;
   }
 }

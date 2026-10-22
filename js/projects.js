@@ -3,8 +3,8 @@
 // ==================================================
 // File ini adalah SATU-SATUNYA tempat yang perlu diedit
 // untuk menambah, mengubah, atau menyembunyikan project.
-// Card project dirender otomatis oleh js/main.js, jadi
-// tidak perlu menyalin markup HTML.
+// Card project dan dialog detail dirender otomatis oleh
+// js/main.js, jadi tidak perlu menyalin markup HTML.
 //
 // CARA MENAMBAH PROJECT
 // 1. Salin satu object { ... } di bawah (termasuk koma).
@@ -28,6 +28,14 @@
 //                          tidak boleh dipublikasikan / belum ada.
 // - published   (opsional) false = sembunyikan project dari website.
 //                          Default-nya true jika field ini dihapus.
+// - details     (opsional) Informasi tambahan untuk dialog detail:
+//     - overview (string)  Penjelasan lengkap project.
+//     - problem  (string)  Masalah/tujuan yang ingin diselesaikan.
+//     - role     (string)  Kontribusi/peran Anda (menggantikan field role).
+//     - features (array)   Daftar fitur utama yang benar-benar ada.
+//   Semua sub-field opsional. Jika belum ada datanya, hapus field tersebut;
+//   dialog hanya menampilkan bagian yang terisi, tanpa teks kosong/undefined.
+//   Satu object di bawah dipakai untuk card DAN dialog detail.
 //
 // URUTAN
 // Project tampil sesuai urutan array: object paling atas tampil
@@ -102,5 +110,15 @@ const portfolioProjects = [
   //   demoUrl: "https://example.com",
   //   repoUrl: "https://github.com/aldistate/nama-project",
   //   published: true,
+  //   // Hapus sub-field yang belum punya data. Jangan mengarang isi.
+  //   details: {
+  //     overview: "Penjelasan lebih lengkap tentang project ini.",
+  //     problem: "Masalah atau kebutuhan yang melatarbelakangi project.",
+  //     role: "Peran dan kontribusi konkret Anda.",
+  //     features: [
+  //       "Fitur utama pertama yang benar-benar tersedia",
+  //       "Fitur utama kedua yang benar-benar tersedia",
+  //     ],
+  //   },
   // },
 ];
