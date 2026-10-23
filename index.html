@@ -38,6 +38,11 @@
     <meta name="twitter:image" content="./img/aldiputra.png" />
 
     <link rel="icon" href="./ico/favicon2.ico" type="image/x-icon" />
+    <!-- Menandai bahwa JS aktif sebelum paint, agar fallback <details> tidak
+         berkedip ketika overlay menu mengambil alih navigasi mobile. -->
+    <script>
+      document.documentElement.classList.add("js");
+    </script>
     <link rel="stylesheet" href="./css/style.css" />
 
     <!-- Structured data: informasi profil dasar untuk mesin pencari. -->
@@ -88,7 +93,7 @@
       class="fixed inset-x-0 top-0 z-50 border-b border-slate-200 bg-white transition-shadow duration-300"
     >
       <div class="container">
-        <div class="flex h-16 items-center justify-between gap-4 lg:h-20">
+        <div class="site-header-bar flex h-16 items-center justify-between gap-4 lg:h-20">
           <!-- Brand -->
           <a
             href="#home"
@@ -212,7 +217,8 @@
       </div>
     </header>
 
-    <!-- Floating menu launcher: muncul setelah pengunjung mulai scroll. -->
+    <!-- Floating menu launcher: fixed di kanan atas, tetap tersedia saat
+         navbar utama menghilang karena scroll. -->
     <button
       id="menu-launcher"
       type="button"

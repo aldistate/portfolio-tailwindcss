@@ -6,7 +6,7 @@ Website portofolio statis milik **Aldi Putra Nawasta**, dibangun dengan HTML, Ta
 
 - **HTML5** — satu halaman dengan section Home, quote interlude, About, Skills, Projects, dan Contact.
 - **Tailwind CSS 3** — styling, design token, dan build CSS.
-- **JavaScript (vanilla)** — render project cards, dialog detail project, navigasi mobile, floating menu setelah scroll, jam Asia/Jakarta, scroll reveal, custom cursor, parallax ringan, magnetic hover, efek mengetik, dan tombol salin email.
+- **JavaScript (vanilla)** — render project cards, dialog detail project, navigasi mobile, menu overlay fixed di kanan atas, jam Asia/Jakarta, scroll reveal, custom cursor, parallax ringan, magnetic hover, efek mengetik, dan tombol salin email.
 - Tanpa dependency runtime eksternal. Typed.js dari CDN sudah dihapus dan diganti implementasi kecil di `js/main.js`.
 
 ## Struktur Project
@@ -172,7 +172,8 @@ Section ini berada di antara hero dan About, dengan reveal `clip`, tanda kutip d
 Objek `MOTION` di bagian atas `js/main.js` mengatur:
 
 - `reveal.stagger`, `threshold`, `rootMargin`, dan `replay`;
-- `launcher.showAfter` — jarak scroll sebelum launcher menggantikan navbar (default **420 px**);
+- `navigation.hideAfter` — jarak scroll saat navbar mulai disembunyikan (default **96 px**);
+- `navigation.showAt` — jarak scroll maksimum agar navbar kembali tampil (default **12 px**); nilai ini sengaja lebih kecil dari `hideAfter` agar scroll naik kecil di tengah halaman tidak memunculkan navbar;
 - `magnetic.max` (default **8 px**), `magnetic.strength` (default **0.16**), dan `magnetic.lerp`;
 - `cursor.enabled` dan `cursor.lerp`;
 - `parallax.lerp`, `tilt.max`, `menu.*`, dan `modal.closeDuration`.
@@ -187,15 +188,20 @@ Durasi/easing CSS ada di variabel `:root` pada `src/input.css` (`--duration-fast
 - Gerak memakai `requestAnimationFrame` dan kembali halus ke posisi awal saat pointer keluar.
 - Untuk mematikan magnetic pada elemen tertentu, hapus atribut `data-magnetic`; untuk mematikannya secara global, ubah `initMagneticElements()` agar langsung `return` atau hapus pemanggilannya.
 
-### Floating menu setelah scroll
+### Navbar dan floating menu
 
-- Launcher bulat di kanan bawah muncul setelah scroll melewati `MOTION.launcher.showAfter` (420 px).
-- Saat launcher aktif, navigasi desktop dan menu mobile `<details>` disembunyikan sehingga hanya ada satu sistem navigasi.
-- Menu overlay berisi link bernomor 01–05, status aktif `aria-current`, jam Jakarta, social links, dan email.
+- Navbar tetap terlihat di bagian paling atas. Setelah scroll melewati `MOTION.navigation.hideAfter` (96 px), navbar bergerak keluar dengan transisi dan tidak meninggalkan ruang kosong karena posisinya `fixed`.
+- Navbar kembali hanya saat scroll mencapai `MOTION.navigation.showAt` (12 px). Di antara kedua nilai tersebut navbar tetap tersembunyi, termasuk saat pengunjung scroll naik sedikit di tengah halaman.
+- Saat navbar tersembunyi, elemen diberi `inert` dan `aria-hidden` agar tidak bisa difokuskan di belakang layar.
+- Launcher fixed berada di kanan atas viewport, bukan kanan bawah. Selama JavaScript aktif launcher selalu tersedia, termasuk ketika navbar masih terlihat; header menyediakan ruang di kanan agar launcher tidak bertabrakan dengan brand, nav, atau CTA.
+- Launcher menghormati `safe-area-inset`, memiliki target sentuh minimal 44 px, dan menjadi ikon saja di bawah breakpoint 768 px.
+- Launcher memakai animasi idle berupa glow ring tipis yang berdenyut lambat. Animasi berhenti saat hover/focus atau saat menu terbuka, serta dimatikan oleh `prefers-reduced-motion`.
+- Menu overlay berisi link bernomor 01–05, status aktif `aria-current`, jam Jakarta, social links, dan email. Pada pengguna JavaScript, menu mobile `<details>` disembunyikan dan digantikan oleh overlay yang sama untuk desktop dan mobile; `<details>` tetap menjadi fallback tanpa JavaScript.
+- Latar overlay memakai gradient pada container scroll (bukan lapisan setinggi viewport pertama), sehingga gradient tetap menutupi layar saat daftar menu di-scroll. Header overlay bersifat sticky dengan lapisan fade full-width agar tombol close tetap terjangkau tanpa memotong gradient atau membuat blok selebar konten menu.
+- Tombol close memakai gradient, border, shadow, hover, dan focus yang sama dengan launcher. Di layar lebar tombol close digeser ke tepi kanan viewport agar posisinya konsisten dengan launcher yang baru ditutup.
 - Launcher memakai `aria-expanded` dan `aria-controls`; menu memakai `role="dialog"`, `aria-modal`, focus trap, `Escape`, dan scroll lock.
 - Latar belakang diberi `inert` selama menu terbuka. Setelah link dipilih, overlay ditutup, halaman menuju section, dan fokus dipindahkan ke heading section tersebut.
 - Klik link, tombol close, atau `Escape` menutup menu. Tombol close tetap terlihat saat overlay di-scroll, dan pada layar sentuh seluruh kontrol dapat digunakan tanpa hover.
-- Footer mendapat ruang tambahan saat launcher aktif agar tombol **Back to top** tidak tertutup.
 - Tanpa JavaScript, launcher dan overlay tidak muncul; navigasi header biasa tetap berfungsi.
 
 ### Project detail dialog
@@ -220,7 +226,7 @@ Untuk mematikan efek tertentu:
 - **Magnetic:** hapus `data-magnetic` dari elemen atau lewati `initMagneticElements()`.
 - **Parallax/tilt:** hapus pemanggilan `initHeroParallax()` / `initProjectTilt()` atau set `MOTION` terkait.
 - **Jam:** ubah `CLOCK.timeZone` dan `CLOCK.label` jika lokasi berubah.
-- **Launcher:** ubah `MOTION.launcher.showAfter` ke angka lebih besar, atau hapus markup `#menu-launcher` dan `#site-menu`.
+- **Launcher / menu:** hapus markup `#menu-launcher` dan `#site-menu` untuk menonaktifkan menu overlay, atau atur `MOTION.navigation.hideAfter` ke nilai yang sangat besar agar navbar tidak pernah tersembunyi. Animasi idle dapat dimatikan dengan menghapus blok `.menu-launcher::after` di `src/input.css`.
 
 ### Tanpa JavaScript
 
@@ -235,7 +241,8 @@ Website ini sepenuhnya statis. Jalankan `npm run build`, lalu deploy `index.html
 - Skip link, landmark, hierarki heading, dan `aria` pada navigasi.
 - Focus state yang jelas untuk keyboard.
 - Menu mobile header memakai `<details>` sehingga tetap berfungsi tanpa JavaScript.
-- Overlay menu setelah scroll memakai `role="dialog"`, `aria-modal`, `aria-expanded`, focus trap, `Escape`, dan pengembalian fokus ke launcher.
+- Overlay menu fixed memakai `role="dialog"`, `aria-modal`, `aria-expanded`, focus trap, `Escape`, dan pengembalian fokus ke launcher.
+- Navbar yang tersembunyi saat scroll diberi `inert` dan `aria-hidden`; tombol launcher tetap dapat dijangkau dengan keyboard.
 - Dialog project memakai native `<dialog>`, `aria-labelledby` dinamis, fokus awal pada tombol close, focus trap, `Escape`, scroll lock, dan pengembalian fokus ke card asal.
 - Animasi mengetik, entrance hero, scroll reveal, parallax, tilt, magnetic, dan custom cursor menghormati `prefers-reduced-motion`; custom cursor dan magnetic juga dinonaktifkan pada perangkat sentuh.
 - Tombol **Explore project** selalu terlihat, sehingga detail project tidak bergantung pada hover di layar sentuh.

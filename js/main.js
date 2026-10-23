@@ -3,7 +3,7 @@
 // ==================================================
 // File ini menangani:
 // 1. Render card project + detail dialog dari js/projects.js.
-// 2. Header, progress bar, menu aktif, dan launcher setelah scroll.
+// 2. Header, progress bar, menu aktif, dan launcher fixed.
 // 3. Navigasi mobile <details> dan overlay menu penuh.
 // 4. Scroll reveal dengan variasi arah per section.
 // 5. Custom cursor (hanya pointer presisi / non-touch).
@@ -37,9 +37,13 @@
       // Durasi fade overlay penuh sebelum elemen `hidden` kembali.
       overlayCloseDuration: 260,
     },
-    launcher: {
-      // Launcher menggantikan navbar setelah halaman di-scroll sejauh ini.
-      showAfter: 420,
+    navigation: {
+      // Navbar disembunyikan setelah melewati jarak ini.
+      hideAfter: 96,
+      // Muncul lagi hanya saat benar-benar kembali ke atas (hysteresis).
+      // Jangan samakan dengan hideAfter agar scroll kecil ke atas di tengah
+      // halaman tidak memunculkan navbar kembali.
+      showAt: 12,
     },
     cursor: {
       enabled: true,
@@ -389,20 +393,50 @@
   const progressBar = document.querySelector("#scroll-progress-bar");
   const menuLauncher = document.querySelector("#menu-launcher");
   let scrollTicking = false;
+  let navigationHidden = false;
 
   const updateScrollUI = () => {
-    if (header) header.classList.toggle("header-scrolled", window.scrollY > 8);
+    const scrollY = Math.max(0, window.scrollY);
 
-    const launcherActive = window.scrollY > MOTION.launcher.showAfter;
-    document.body.classList.toggle("launcher-active", launcherActive);
+    // Hysteresis: sembunyikan setelah hideAfter, tetapi baru tampilkan lagi
+    // saat pengunjung benar-benar kembali ke atas. Scroll naik kecil di tengah
+    // halaman tidak akan memunculkan navbar kembali.
+    if (!navigationHidden && scrollY > MOTION.navigation.hideAfter) {
+      navigationHidden = true;
+    } else if (navigationHidden && scrollY <= MOTION.navigation.showAt) {
+      navigationHidden = false;
+    }
+
+    if (header) header.classList.toggle("header-scrolled", scrollY > 8);
+
+    document.body.classList.toggle("launcher-active", navigationHidden);
 
     if (menuLauncher) {
-      menuLauncher.setAttribute("aria-hidden", String(!launcherActive));
-      menuLauncher.tabIndex = launcherActive ? 0 : -1;
+      // Launcher selalu tersedia selama JS aktif, baik navbar terlihat
+      // maupun sudah tersembunyi karena scroll.
+      menuLauncher.setAttribute("aria-hidden", "false");
+      menuLauncher.tabIndex = 0;
+    }
+
+    // Navbar yang sudah tersembunyi juga dikeluarkan dari urutan fokus/AT.
+    if (header) {
+      if (navigationHidden) {
+        if (header.contains(document.activeElement) && menuLauncher) {
+          menuLauncher.focus({ preventScroll: true });
+        }
+        header.setAttribute("aria-hidden", "true");
+        header.setAttribute("inert", "");
+      } else {
+        header.removeAttribute("aria-hidden");
+        // Jangan membuka fokus ke header saat overlay menu masih terbuka.
+        if (!document.body.classList.contains("menu-open")) {
+          header.removeAttribute("inert");
+        }
+      }
     }
 
     // Launcher menggantikan menu <details>; tutup menu lama saat transisi.
-    if (launcherActive) {
+    if (navigationHidden) {
       const openMobileNav = document.querySelector("#mobile-nav[open]");
       if (openMobileNav) {
         const focusWasInside = openMobileNav.contains(document.activeElement);
@@ -417,7 +451,7 @@
       const scrollable =
         document.documentElement.scrollHeight - window.innerHeight;
       const progress =
-        scrollable > 0 ? Math.min(1, Math.max(0, window.scrollY / scrollable)) : 0;
+        scrollable > 0 ? Math.min(1, Math.max(0, scrollY / scrollable)) : 0;
       progressBar.style.transform = `scaleX(${progress.toFixed(4)})`;
     }
 
@@ -551,7 +585,7 @@
   }
 
   // ==================================================
-  // 4. OVERLAY MENU SETELAH SCROLL
+  // 4. OVERLAY MENU FIXED
   // ==================================================
   const initSiteMenu = () => {
     const menu = document.querySelector("#site-menu");
@@ -574,9 +608,18 @@
       backgroundTargets.forEach((element) => {
         if (inert) {
           element.setAttribute("inert", "");
-        } else {
-          element.removeAttribute("inert");
+          return;
         }
+
+        // Navbar yang sedang tersembunyi harus tetap inert setelah overlay
+        // ditutup; jangan biarkan cleanup menu membuka fokus ke header.
+        if (element === header && navigationHidden) {
+          element.setAttribute("aria-hidden", "true");
+          element.setAttribute("inert", "");
+          return;
+        }
+
+        element.removeAttribute("inert");
       });
     };
 

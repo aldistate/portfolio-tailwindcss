@@ -19,6 +19,27 @@
   --duration-base: 320ms;
   --duration-slow: 700ms;
   --reveal-distance: 24px;
+  /* Titik jangkar untuk launcher dan tombol close. */
+  --nav-edge-x: 1.25rem;
+  --nav-edge-y: 1rem;
+  --nav-panel-glow:
+    radial-gradient(circle at 30% 18%, rgba(94, 234, 212, 0.26), transparent 46%),
+    linear-gradient(140deg, #115e59 0%, #0f172a 56%, #042f2e 100%);
+  --nav-panel-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    0 18px 38px -22px rgba(2, 6, 23, 0.85);
+}
+
+@media (min-width: 640px) {
+  :root {
+    --nav-edge-x: 2rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  :root {
+    --nav-edge-y: 1.5rem;
+  }
 }
 
 /* ==================================================
@@ -212,6 +233,49 @@
   /* Bayangan header setelah halaman di-scroll. */
   .header-scrolled {
     @apply shadow-sm;
+  }
+
+  /* Navbar fixed keluar dari viewport saat state launcher-active aktif. */
+  #site-header {
+    transition:
+      transform 320ms var(--ease-out-soft),
+      opacity 220ms ease,
+      visibility 0s,
+      box-shadow 300ms ease;
+  }
+
+  body.launcher-active #site-header {
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-100%);
+    pointer-events: none;
+    transition:
+      transform 320ms var(--ease-out-soft),
+      opacity 220ms ease,
+      visibility 0s 320ms,
+      box-shadow 300ms ease;
+  }
+
+  /* Navbar hilang saat scroll, jadi anchor cukup menyisakan napas kecil. */
+  main section[id] {
+    scroll-margin-top: max(1.5rem, env(safe-area-inset-top));
+  }
+
+  /* Overlay menu menggantikan <details> pada pengguna yang mengaktifkan JS.
+     Tanpa JS, <details> tetap tampil sebagai fallback navigasi mobile. */
+  html.js #mobile-nav {
+    display: none;
+  }
+
+  /* Ruang untuk launcher fixed agar tidak menabrak brand/nav/CTA. */
+  html.js #site-header .site-header-bar {
+    padding-right: 4.5rem;
+  }
+
+  @media (min-width: 768px) {
+    html.js #site-header .site-header-bar {
+      padding-right: 7.5rem;
+    }
   }
 
   /* Kursor efek mengetik. */
@@ -733,33 +797,9 @@ html.cursor-ready select {
 /* ==================================================
    HEADER STATE: NAV BIASA -> FLOATING LAUNCHER
    ==================================================
-   Navigasi utama hanya tampil di atas. Setelah melewati ambang scroll,
-   launcher menggantikannya agar tidak ada dua sistem navigasi aktif.
+   Header bergerak sebagai satu kesatuan; launcher fixed tetap berada di
+   kanan atas, jadi footer tidak perlu ruang tambahan.
 */
-#site-header nav[aria-label="Primary"],
-#mobile-nav {
-  transition:
-    opacity 180ms ease,
-    translate 180ms ease,
-    visibility 0s;
-}
-
-body.launcher-active #site-header nav[aria-label="Primary"],
-body.launcher-active #mobile-nav {
-  opacity: 0;
-  visibility: hidden;
-  pointer-events: none;
-  translate: 0 -5px;
-  transition:
-    opacity 180ms ease,
-    translate 180ms ease,
-    visibility 0s 180ms;
-}
-
-/* Ruang ekstra agar launcher tidak menutupi "Back to top" di footer. */
-body.launcher-active footer {
-  padding-bottom: 7rem;
-}
 
 /* ==================================================
    HERO: CLOCK, PORTRAIT LIGHT, SCROLL CUE
@@ -993,39 +1033,48 @@ html.reveal-ready .quote-figure.is-visible .quote-mark {
 /* ==================================================
    FLOATING MENU LAUNCHER
    ================================================== */
+/* Launcher dan tombol close memakai satu resep gradient yang sama. */
+.menu-launcher,
+.site-menu-close {
+  border: 1px solid rgba(94, 234, 212, 0.28);
+  background-color: #020617;
+  background-image: var(--nav-panel-glow);
+  box-shadow: var(--nav-panel-shadow);
+  color: #fff;
+}
+
 .menu-launcher {
   position: fixed;
-  right: max(1rem, env(safe-area-inset-right));
-  bottom: max(1rem, env(safe-area-inset-bottom));
-  z-index: 50;
+  top: max(var(--nav-edge-y), env(safe-area-inset-top));
+  right: max(var(--nav-edge-x), env(safe-area-inset-right));
+  z-index: 60;
   display: inline-flex;
   align-items: center;
   gap: 0.75rem;
+  min-width: 2.75rem;
+  min-height: 2.75rem;
   padding: 0.85rem 1rem;
-  border: 1px solid rgba(148, 163, 184, 0.28);
   border-radius: 9999px;
-  background-color: rgba(2, 6, 23, 0.92);
-  color: #fff;
   font-size: 10px;
   font-weight: 600;
   letter-spacing: 0.16em;
   text-transform: uppercase;
-  box-shadow: 0 18px 40px -20px rgba(2, 6, 23, 0.7);
   -webkit-backdrop-filter: blur(12px);
   backdrop-filter: blur(12px);
   opacity: 0;
   visibility: hidden;
-  transform: translateY(14px) scale(0.94);
+  transform: translateY(-8px) scale(0.96);
   pointer-events: none;
   transition:
     opacity 250ms ease,
     transform 350ms var(--ease-out-soft),
-    background-color 200ms ease,
+    filter 200ms ease,
     border-color 200ms ease,
     visibility 0s 350ms;
 }
 
-body.launcher-active .menu-launcher {
+/* JS aktif: launcher selalu tersedia, termasuk saat navbar masih terlihat. */
+html.js .menu-launcher {
   opacity: 1;
   visibility: visible;
   transform: translateY(0) scale(1);
@@ -1036,12 +1085,49 @@ body.launcher-active .menu-launcher {
 body.menu-open .menu-launcher {
   opacity: 0;
   visibility: hidden;
+  transform: translateY(-8px) scale(0.96);
   pointer-events: none;
 }
 
-.menu-launcher:hover {
-  background-color: theme("colors.brand.700");
-  border-color: rgba(94, 234, 212, 0.45);
+.menu-launcher:hover,
+.site-menu-close:hover {
+  border-color: rgba(94, 234, 212, 0.52);
+  filter: brightness(1.08) saturate(1.06);
+}
+
+/* Ambient glow idle yang sangat halus; bukan gerakan posisi tombol. */
+.menu-launcher::after {
+  content: "";
+  position: absolute;
+  inset: -3px;
+  border: 1px solid rgba(94, 234, 212, 0.38);
+  border-radius: inherit;
+  opacity: 0;
+  pointer-events: none;
+  animation: launcher-idle 5.2s ease-in-out infinite;
+}
+
+@keyframes launcher-idle {
+  0%,
+  58%,
+  100% {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  72% {
+    opacity: 0.5;
+  }
+  88% {
+    opacity: 0;
+    transform: scale(1.12);
+  }
+}
+
+.menu-launcher:hover::after,
+.menu-launcher:focus-visible::after,
+body.menu-open .menu-launcher::after {
+  animation: none;
+  opacity: 0;
 }
 
 .menu-launcher-icon {
@@ -1080,6 +1166,13 @@ body.menu-open .menu-launcher {
   overflow-y: auto;
   overscroll-behavior: contain;
   background-color: #020617;
+  /* Gradient berada di container scroll, bukan child absolute setinggi
+     viewport pertama. Dengan begitu gradient tetap menutupi seluruh layar
+     ketika daftar menu di-scroll. */
+  background-image:
+    radial-gradient(circle at 84% 12%, rgba(20, 184, 166, 0.2), transparent 38%),
+    radial-gradient(circle at 8% 92%, rgba(15, 118, 110, 0.16), transparent 42%);
+  background-repeat: no-repeat;
   color: #fff;
   opacity: 0;
   transition: opacity 250ms ease;
@@ -1089,17 +1182,32 @@ body.menu-open .menu-launcher {
   display: none;
 }
 
+/* Shade full-width di atas overlay: mencegah teks yang lewat di bawah header
+   sticky terlihat, tanpa membuat blok selebar konten menu. */
+.site-menu::before {
+  content: "";
+  position: fixed;
+  inset: 0 0 auto 0;
+  z-index: 5;
+  height: calc(4.75rem + env(safe-area-inset-top));
+  pointer-events: none;
+  background: linear-gradient(
+    180deg,
+    #020617 0%,
+    #020617 82%,
+    rgba(2, 6, 23, 0) 100%
+  );
+}
+
 .site-menu.is-open {
   opacity: 1;
 }
 
 .site-menu-ambient {
-  position: absolute;
+  position: fixed;
   inset: 0;
   pointer-events: none;
-  background:
-    radial-gradient(circle at 84% 12%, rgba(20, 184, 166, 0.2), transparent 38%),
-    radial-gradient(circle at 8% 92%, rgba(15, 118, 110, 0.16), transparent 42%);
+  background: none;
 }
 
 .site-menu-ambient::after {
@@ -1115,7 +1223,6 @@ body.menu-open .menu-launcher {
 
 .site-menu-shell {
   position: relative;
-  z-index: 1;
   display: flex;
   min-height: 100vh;
   min-height: 100dvh;
@@ -1123,22 +1230,20 @@ body.menu-open .menu-launcher {
   max-width: 1200px;
   margin: 0 auto;
   flex-direction: column;
-  padding: 1.25rem;
-}
-
-@media (min-width: 640px) {
-  .site-menu-shell {
-    padding: 1.5rem 2rem;
-  }
+  padding:
+    max(var(--nav-edge-y), env(safe-area-inset-top))
+    max(var(--nav-edge-x), env(safe-area-inset-right))
+    max(var(--nav-edge-y), env(safe-area-inset-bottom))
+    max(var(--nav-edge-x), env(safe-area-inset-left));
 }
 
 /* Tombol close tetap terjangkau saat overlay di-scroll di layar pendek. */
 .site-menu-head {
   position: sticky;
-  top: 0;
-  z-index: 3;
-  padding-block: 0.75rem;
-  background-color: #020617;
+  top: env(safe-area-inset-top);
+  z-index: 6;
+  padding-block: 0;
+  background-color: transparent;
 }
 
 .site-menu-grid {
@@ -1296,25 +1401,30 @@ body.menu-open .menu-launcher {
 }
 
 .site-menu-close {
+  position: relative;
   display: inline-flex;
   height: 2.75rem;
   width: 2.75rem;
   flex: none;
   align-items: center;
   justify-content: center;
-  border: 1px solid rgba(255, 255, 255, 0.18);
   border-radius: 9999px;
-  color: #fff;
   transition:
-    background-color var(--duration-fast) ease,
-    border-color var(--duration-fast) ease,
-    transform var(--duration-base) var(--ease-out-soft);
+    transform var(--duration-base) var(--ease-out-soft),
+    filter var(--duration-fast) ease,
+    border-color var(--duration-fast) ease;
 }
 
 .site-menu-close:hover {
-  background-color: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 255, 255, 0.32);
   transform: rotate(90deg);
+}
+
+/* Di layar lebar, shell menu dibatasi 1200px. Geser close ke tepi kanan
+   viewport agar posisinya sama dengan launcher yang baru ditutup. */
+@media (min-width: 1200px) {
+  .site-menu-close {
+    translate: calc((100vw - 1200px) / 2) 0;
+  }
 }
 
 .site-menu-foot {
@@ -1536,14 +1646,10 @@ html.dialog-open .menu-launcher {
     top: -2.35rem;
     font-size: 6.5rem;
   }
-
-  body.launcher-active footer {
-    padding-bottom: 6rem;
-  }
 }
 
-/* Di layar sangat sempit, launcher menjadi ikon saja agar tidak menutupi CTA. */
-@media (max-width: 360px) {
+/* Di layar kecil, launcher menjadi ikon saja agar tidak menutupi konten. */
+@media (max-width: 767px) {
   .menu-launcher {
     gap: 0;
     padding: 0.9rem;
@@ -1691,6 +1797,12 @@ html.dialog-open .menu-launcher {
   .clock-status-dot,
   .scroll-cue-line span {
     display: none !important;
+  }
+
+  /* Tombol tetap jelas secara statis, tanpa denyut/glow idle. */
+  .menu-launcher::after {
+    animation: none !important;
+    opacity: 0 !important;
   }
 
   html.cursor-ready,
